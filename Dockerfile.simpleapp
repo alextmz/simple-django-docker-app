@@ -3,4 +3,4 @@ ENV PYTHONUNBUFFERED 1
 RUN apk add python2 py2-django
 WORKDIR /simpleapp
 COPY . .
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8080"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:80"]
