@@ -1,0 +1,23 @@
+[
+{
+  "model": "simpleapp.string",
+  "pk": 1,
+  "fields": {
+    "string": "This is a string on the database"
+  }
+},
+{
+  "model": "simpleapp.string",
+  "pk": 2,
+  "fields": {
+    "string": "This is a second string on the db!"
+  }
+},
+{
+  "model": "simpleapp.string",
+  "pk": 3,
+  "fields": {
+    "string": "Surprise, this is also on the db!"
+  }
+}
+]

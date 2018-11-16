@@ -6,4 +6,4 @@ FROM initialstatic
 WORKDIR /simpleapp
 COPY . .
 COPY wait-for /usr/local/bin/
-CMD ["sh","-c","/usr/local/bin/wait-for db:3306 -- sh -c 'python manage.py runserver 0.0.0.0:80'"]
+CMD ["sh","-c","/usr/local/bin/wait-for db:3306 -- sh -c 'python manage.py makemigrations && python manage.py migrate && python manage.py loaddata initialstrings.json' && python manage.py runserver 0.0.0.0:80"]
