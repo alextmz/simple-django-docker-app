@@ -1,6 +1,9 @@
-FROM alpine:3.8
+FROM alpine:3.8 as initialstatic
 ENV PYTHONUNBUFFERED 1
-RUN apk add python2 py2-django
+RUN apk add python2 py2-django py-mysqldb
+
+FROM initialstatic
 WORKDIR /simpleapp
 COPY . .
-CMD ["python", "manage.py", "runserver", "0.0.0.0:80"]
+COPY wait-for /usr/local/bin/
+CMD ["sh","-c","/usr/local/bin/wait-for db:3306 -- sh -c 'python manage.py runserver 0.0.0.0:80'"]
