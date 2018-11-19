@@ -1,9 +1,36 @@
 FROM alpine:3.8 as initialstatic
 ENV PYTHONUNBUFFERED 1
-RUN apk add python2 py2-django py-mysqldb
+
+RUN apk add python2 py2-django py-mysqldb nginx uwsgi uwsgi-python supervisor
+
+# SupervisorD config
+COPY configfiles/supervisord.conf /etc/
+
+# NGINX config
+# turn daemon mode off, as it will be watched by supervisord
+RUN echo "daemon off;" >> /etc/nginx/nginx.conf
+# put PID on /tmp as docker doesn't run init, so no /run gets created
+RUN echo 'pid /tmp/nginx.pid;' >> /etc/nginx/nginx.conf
+COPY configfiles/nginx-default-site.conf /etc/nginx/conf.d/default.conf
+
+# uWSGI config
+COPY configfiles/uwsgi.ini /etc/uwsgi/
+
+# wait-for script (for db)
+COPY wait-for /usr/local/bin/
 
 FROM initialstatic
 WORKDIR /simpleapp
-COPY . .
-COPY wait-for /usr/local/bin/
-CMD ["sh","-c","/usr/local/bin/wait-for db:3306 -- sh -c 'python manage.py makemigrations && python manage.py migrate && python manage.py loaddata initialstrings.json' && python manage.py runserver 0.0.0.0:80"]
+# main app data
+# the funny syntax is due to https://github.com/moby/moby/issues/29211
+COPY djangoproject/ ./djangoproject
+COPY simpleapp/ ./simpleapp
+COPY manage.py .
+
+# start everything up
+# we do:
+# 1. wait for the db container to be up
+# 2. make and apply migrations (django database operations)
+# 3. load the initial database data
+# 4. start supervisord, which in turn launches nginx and uwsgi on the app code container
+CMD ["sh","-c","/usr/local/bin/wait-for db:3306 -- sh -c 'python manage.py makemigrations && python manage.py migrate && python manage.py loaddata initialstrings' && supervisord -c /etc/supervisord.conf"]
